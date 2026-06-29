@@ -1,0 +1,16 @@
+# torch packages with specific version to work on python3.9 and V100 GPUS
+torch==2.6.0
+torchvision==0.21.0
+
+# other packages
+numpy
+pandas
+matplotlib
+jupyter
+scikit-image
+scikit-learn
+pydicom
+nibabel
+notebook
+optuna
+albumentations
