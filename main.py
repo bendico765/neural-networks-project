@@ -1,6 +1,5 @@
 import torch
-from torch.utils.data import DataLoader, Dataset
-import torchvision.transforms.v2 as transforms_v2
+from torch.utils.data import DataLoader
 import pandas as pd
 import optuna
 import cbis
@@ -14,6 +13,8 @@ import visualization
 
 import metrics
 import unet
+import fcn
+import segnet
 from sklearn.model_selection import train_test_split
 
 # picking device
@@ -23,6 +24,7 @@ print(f"Device:{device}")
 # path to the root folder of the data
 parser = argparse.ArgumentParser(description="")
 parser.add_argument("data_root_filepath", help="Path to the project data root directory.")
+parser.add_argument("--model", type=str, choices=["unet", "segnet", "fcn"], default="unet", help="The model to use.")
 parser.add_argument("--lr", type=float, default=1e-3)
 parser.add_argument("--n-trials", type=int, default=10, help="Number of trials for hyperparameter optimization")
 parser.add_argument("--batch-size", type=int, default=20, help="Batch size for training")
@@ -40,6 +42,7 @@ args = parser.parse_args()
 
 # Command-line parameters
 data_root_filepath = args.data_root_filepath
+model_type = args.model
 learning_rate = args.lr
 n_trials = args.n_trials
 batch_size = args.batch_size
@@ -122,6 +125,7 @@ if enable_optimization:
     study.optimize(
         engine.Objective(
             f"{data_root_filepath}/runs/{run_name}/trials",
+            model_type,
             train_dataloader,
             validation_dataloader,
             loss_fn,
@@ -146,7 +150,13 @@ else:
     print("\nTraining on train set and evaluating on validation set--------", flush=True)
 
     # creating model
-    model = unet.UNet(n_class=2)
+    if model_type == "unet":
+        model = unet.UNet(n_class=2)
+    elif model_type == "segnet":
+        model = segnet.SegNet(in_channels=1, out_channels=2)
+    else:
+        model= fcn.FCN(num_classes=2)
+
     model.to(device)
 
     # defining optimizer
@@ -292,7 +302,12 @@ if args.test:
     print(f"Test:{len(df_test)}", flush=True)
 
     # creating model
-    model = unet.UNet(n_class=2)
+    if model_type == "unet":
+        model = unet.UNet(n_class=2)
+    elif model_type == "segnet":
+        model = segnet.SegNet(in_channels=1, out_channels=2)
+    else:
+        model = fcn.FCN(num_classes=2)
     model.to(device)
 
     # defining optimizer

@@ -3,6 +3,8 @@ from torch.utils.data import DataLoader
 
 import metrics
 import unet
+import fcn
+import segnet
 import os
 import pandas as pd
 import visualization
@@ -73,6 +75,7 @@ def test_loop(
 class Objective:
     def __init__(self, 
                  trial_folder_filepath: str,
+                 model_type: str,
                  train_dataloader: DataLoader, 
                  validation_dataloader: DataLoader,
                  loss_fn: torch.nn.Module,
@@ -81,6 +84,7 @@ class Objective:
                  min_delta: float,
                  device: torch.device):
         self.trial_folder_filepath = trial_folder_filepath
+        self.model_type = model_type
         self.train_dataloader = train_dataloader
         self.validation_dataloader = validation_dataloader
         self.loss_fn = loss_fn
@@ -99,7 +103,12 @@ class Objective:
         batch_size = trial.suggest_categorical("batch-size", [2, 4, 8, 16])
         
         # creating model
-        model = unet.UNet(n_class=2)
+        if self.model_type == "unet":
+            model = unet.UNet(n_class=2)
+        elif self.model_type == "segnet":
+            model = segnet.SegNet(in_channels=1, out_channels=2)
+        else:
+            model = fcn.FCN(num_classes=2)
         model.to(self.device)
         
         # defining optimizer
