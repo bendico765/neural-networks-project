@@ -1,4 +1,3 @@
-import torch
 import torch.nn as nn
 
 
@@ -47,7 +46,7 @@ class DecoderBlock(nn.Module):
         self.unpool = nn.MaxUnpool2d(kernel_size=2, stride=2)
 
         self.layers = nn.ModuleList()
-        for i in range(depth - 1)
+        for i in range(depth - 1):
             self.layers.append(ConvReLU(in_c, in_c, kernel_size=kernel_size, padding=padding))
 
         if logits:

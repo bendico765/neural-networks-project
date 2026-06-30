@@ -7,14 +7,6 @@ class FcnBlock(nn.Module):
     def __init__(self, in_channels, out_channels, kernel_size:int=3, padding=1, depth:int=2):
         super().__init__()
 
-        """
-        self.conv = nn.Sequential(
-            nn.Conv2d(in_channels, out_channels, kernel_size=kernel_size, padding=padding),
-            nn.ReLU(inplace=True),
-            nn.Conv2d(out_channels, out_channels, kernel_size=kernel_size, padding=padding),
-            nn.ReLU(inplace=True)
-        )
-        """
         self.conv_layers = nn.ModuleList()
         for i in range(depth):
             self.conv_layers.append(
@@ -35,7 +27,7 @@ class FcnBlock(nn.Module):
         return x
 
 class FCN(nn.Module):
-    def __init__(self, num_classes):
+    def __init__(self, in_channels:int, out_channels:int):
         super().__init__()
 
         # -------------------------
@@ -43,7 +35,7 @@ class FCN(nn.Module):
         # -------------------------
 
         # Block 1
-        self.block1 = FcnBlock(1, 64, kernel_size=3, padding=1, depth=2)
+        self.block1 = FcnBlock(in_channels, 64, kernel_size=3, padding=1, depth=2)
 
         # Block 2
         self.block2 = FcnBlock(64, 128, kernel_size=3, padding=1, depth=2)
@@ -70,12 +62,12 @@ class FCN(nn.Module):
         self.drop7 = nn.Dropout2d()
 
         # Classifier
-        self.score = nn.Conv2d(4096, num_classes, kernel_size=1)
+        self.score = nn.Conv2d(4096, out_channels, kernel_size=1)
 
         # Upsampling to go back to original size
         self.upscore = nn.ConvTranspose2d(
-            num_classes,
-            num_classes,
+            out_channels,
+            out_channels,
             kernel_size=64,
             stride=32,
             padding=16,

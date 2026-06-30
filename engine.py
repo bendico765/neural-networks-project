@@ -104,11 +104,11 @@ class Objective:
         
         # creating model
         if self.model_type == "unet":
-            model = unet.UNet(n_class=2)
+            model = unet.UNet(in_channels=1, out_channels=2)
         elif self.model_type == "segnet":
             model = segnet.SegNet(in_channels=1, out_channels=2)
         else:
-            model = fcn.FCN(num_classes=2)
+            model = fcn.FCN(in_channels=1, out_channels=2)
         model.to(self.device)
         
         # defining optimizer

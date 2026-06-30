@@ -43,11 +43,11 @@ class UNet(nn.Module):
     For ConvTranspose layer:
     Output size O of a single dimension: O = (I-1)*S - 2P + (K-1) +1
     """
-    def __init__(self, n_class):
+    def __init__(self, in_channels: int, out_channels: int):
         super().__init__()
 
         # ---ENCODER---
-        self.enc1 = DoubleConv(1, 64)
+        self.enc1 = DoubleConv(in_channels, 64)
         self.pool1 = nn.MaxPool2d(kernel_size=2)
 
         self.enc2 = DoubleConv(64, 128)
@@ -74,7 +74,7 @@ class UNet(nn.Module):
         self.up1 = nn.ConvTranspose2d(128, 64, kernel_size=2, stride=2)
         self.dec1 = DoubleConv(128, 64)
 
-        self.outconv = nn.Conv2d(64, n_class, kernel_size=1)
+        self.outconv = nn.Conv2d(64, out_channels, kernel_size=1)
 
     def forward(self, x):
         # Image size (1, 512, 512)
