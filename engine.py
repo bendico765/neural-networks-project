@@ -29,12 +29,7 @@ def train_loop(
         # compute prediction and loss
         logits = model(X)
 
-        if isinstance(loss_fn, metrics.DiceLoss) or isinstance(loss_fn, metrics.JaccardLoss):
-            preds = torch.softmax(logits, dim=1)
-        else: # binary cross entropy
-            preds = torch.sigmoid(logits)
-
-        loss = loss_fn(preds, (y>0).float())
+        loss = loss_fn(logits, y)
 
         # backpropagation
         loss.backward() # backpropagate the prediction loss
@@ -63,12 +58,8 @@ def test_loop(
             y = y.to(device)
             
             logits = model(X)
-            if isinstance(loss_fn, metrics.DiceLoss) or isinstance(loss_fn, metrics.JaccardLoss):
-                preds = torch.softmax(logits, dim=1)
-            else:  # binary cross entropy
-                preds = torch.sigmoid(logits)
 
-            test_loss += loss_fn(preds, (y>0).float()).item()
+            test_loss += loss_fn(logits, y).item()
 
     return test_loss / len(dataloader) # return average on the batches
 
@@ -104,11 +95,11 @@ class Objective:
         
         # creating model
         if self.model_type == "unet":
-            model = unet.UNet(in_channels=1, out_channels=2)
+            model = unet.UNet(in_channels=3, out_channels=11)
         elif self.model_type == "segnet":
-            model = segnet.SegNet(in_channels=1, out_channels=2)
+            model = segnet.SegNet(in_channels=3, out_channels=11)
         else:
-            model = fcn.FCN(in_channels=1, out_channels=2)
+            model = fcn.FCN(in_channels=3, out_channels=11)
         model.to(self.device)
         
         # defining optimizer
@@ -145,6 +136,7 @@ class Objective:
             val_losses.append(val_loss)
 
             # each few epoch save some predicted samples
+            """
             if epoch % 4 == 0:
                 utils.save_prediction(
                     model,
@@ -154,7 +146,7 @@ class Objective:
                     self.device,
                     f"{self.trial_folder_filepath}/{trial.number}/figs/prediction_samples"
                 )
-
+            """
             print(f"\nAvg. train loss={train_loss:.6f}\nAvg. val loss={val_loss:.6f}\n", flush=True)
 
             # saving model checkpoints

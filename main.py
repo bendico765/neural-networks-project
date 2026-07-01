@@ -1,8 +1,9 @@
 import torch
+import torch.nn as nn
 from torch.utils.data import DataLoader
 import pandas as pd
 import optuna
-import cbis
+import camvid
 import engine
 import argparse
 import os
@@ -15,7 +16,6 @@ import metrics
 import unet
 import fcn
 import segnet
-from sklearn.model_selection import train_test_split
 
 # picking device
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -29,7 +29,6 @@ parser.add_argument("--lr", type=float, default=1e-3)
 parser.add_argument("--n-trials", type=int, default=10, help="Number of trials for hyperparameter optimization")
 parser.add_argument("--batch-size", type=int, default=20, help="Batch size for training")
 parser.add_argument("--epochs", type=int, default=10, help="Number of epochs for hyperparameter optimization and to re-train the final model")
-parser.add_argument("--loss", type=str, choices=["dice", "jaccard", "bce"], default="dice", help="Loss function")
 parser.add_argument("--patience", type=int, default=5, help="Number of epochs patience for early stopping")
 parser.add_argument("--min-delta", type=float, default=1e-3, help="Minimum delta value for early stopping")
 parser.add_argument("--random-state", type=int, default=None, help="Random state used for loading up data")
@@ -47,7 +46,6 @@ learning_rate = args.lr
 n_trials = args.n_trials
 batch_size = args.batch_size
 epochs = args.epochs
-loss = args.loss
 patience = args.patience
 min_delta = args.min_delta
 random_state = args.random_state
@@ -63,34 +61,26 @@ if not os.path.exists(f"{data_root_filepath}/runs/{run_name}"):
 
 
 # defining transforms to augment data
+"""
 transforms = A.Compose([
     A.HorizontalFlip(p=0.5),
     A.VerticalFlip(p=0.5),
     A.Rotate(limit=270, p=1.0)
 ])
+"""
+transforms = A.Compose([
+    A.RandomResizedCrop(size=(224, 224)),
+    A.HorizontalFlip(p=0.5),
+    A.Normalize()
+])
 
 # define loss
-if loss=="dice":
-    loss_fn = metrics.DiceLoss()
-elif loss=="jaccard":
-    loss_fn = metrics.JaccardLoss()
-else:
-    loss_fn = torch.nn.BCELoss()
+loss_fn = nn.CrossEntropyLoss(ignore_index=11)
 
 ### LOADING DATA
-df = pd.read_csv(f"{data_root_filepath}/lesions.csv")
-
-# keeping only masses
-df = df[(df["kind"] == "Mass") & (df["image view"] == "MLO")]
-
-# dividing data in test and train data
-df_train_val, df_test = train_test_split(df, test_size=0.1,random_state=random_state)
-
-# divide data in training and validation set
-df_train, df_val = train_test_split(df_train_val, test_size=0.22, random_state=random_state)
-
-train_data = cbis.CBIS_Dataset(data_root_filepath, df_train, transforms)
-validation_data = cbis.CBIS_Dataset(data_root_filepath, df_val, transforms)
+train_data = camvid.CAMVID_Dataset(f"{data_root_filepath}/train", f"{data_root_filepath}/train_labels", labels_filepath=f"{data_root_filepath}/class_palette.csv", transform=transforms)
+validation_data = camvid.CAMVID_Dataset(f"{data_root_filepath}/val", f"{data_root_filepath}/val_labels", labels_filepath=f"{data_root_filepath}/class_palette.csv", transform=transforms)
+test_data = camvid.CAMVID_Dataset(f"{data_root_filepath}/test", f"{data_root_filepath}/test_labels", labels_filepath=f"{data_root_filepath}/class_palette.csv")
 
 train_dataloader = DataLoader(
     train_data,
@@ -107,10 +97,10 @@ validation_dataloader = DataLoader(
     persistent_workers=True
 )
 
-print(f"\nData samples (70-20-10 split)------------", flush=True)
-print(f"Training:{len(df_train)}", flush=True)
-print(f"Validation:{len(df_val)}", flush=True)
-print(f"Test:{len(df_test)}", flush=True)
+print(f"\nData samples------------", flush=True)
+print(f"Training:{len(train_data)}", flush=True)
+print(f"Validation:{len(validation_data)}", flush=True)
+print(f"Test:{len(test_data)}", flush=True)
 
 ### HYPERPARAMETER OPTIMIZATION
 if enable_optimization:
@@ -151,11 +141,11 @@ else:
 
     # creating model
     if model_type == "unet":
-        model = unet.UNet(in_channels=1, out_channels=2)
+        model = unet.UNet(in_channels=3, out_channels=11)
     elif model_type == "segnet":
-        model = segnet.SegNet(in_channels=1, out_channels=2)
+        model = segnet.SegNet(in_channels=3, out_channels=11)
     else:
-        model= fcn.FCN(in_channels=1, out_channels=2)
+        model= fcn.FCN(in_channels=3, out_channels=11)
 
     model.to(device)
 
@@ -198,6 +188,7 @@ else:
         val_losses.append(val_loss)
 
         # each few epoch save some predicted samples
+        """
         if epoch % 4 == 0:
             utils.save_prediction(
                 model,
@@ -207,7 +198,7 @@ else:
                 device,
                 f"{data_root_filepath}/runs/{run_name}/model/prediction_samples"
             )
-
+        """
         # logging
         print(f"\nAvg. train loss={train_loss:.6f}\nAvg. val loss={val_loss:.6f}\n", flush=True)
 
@@ -266,21 +257,10 @@ else:
         filepath=f"{data_root_filepath}/runs/{run_name}/model/figs/loss_history.png"
     )
 
-# delete train and validation data to save up some space
-del train_dataloader
-del train_data
-del df_train
-del validation_dataloader
-del validation_data
-del df_val
-
 ### RETRAIN THE BEST MODEL ON THE WHOLE DATASET AND TEST IT
 if args.test:
-    trainval_data = cbis.CBIS_Dataset(data_root_filepath, df_train_val, transform=transforms)
-    test_data = cbis.CBIS_Dataset(data_root_filepath, df_test)
-
     trainval_dataloader = DataLoader(
-        dataset=trainval_data,
+        dataset=torch.utils.data.ConcatDataset([train_data, validation_data]),
         batch_size=batch_size,
         shuffle=True,
         num_workers=4,
@@ -297,17 +277,17 @@ if args.test:
     )
 
     print("\nTRAINING THE FINAL MODEL AND EVALUATING ON THE TEST SET", flush=True)
-    print(f"\nData samples (90-10 split)------------", flush=True)
-    print(f"Training:{len(df_train_val)}", flush=True)
-    print(f"Test:{len(df_test)}", flush=True)
+    print(f"\nData samples------------", flush=True)
+    print(f"Training:{len(train_data) + len(validation_data)}", flush=True)
+    print(f"Test:{len(test_data)}", flush=True)
 
     # creating model
     if model_type == "unet":
-        model = unet.UNet(in_channels=1, out_channels=2)
+        model = unet.UNet(in_channels=3, out_channels=11)
     elif model_type == "segnet":
-        model = segnet.SegNet(in_channels=1, out_channels=2)
+        model = segnet.SegNet(in_channels=3, out_channels=11)
     else:
-        model = fcn.FCN(in_channels=1, out_channels=2)
+        model = fcn.FCN(in_channels=3, out_channels=11)
     model.to(device)
 
     # defining optimizer
@@ -317,7 +297,7 @@ if args.test:
     )
 
     # define loss
-    loss_fn = metrics.DiceLoss()
+    loss_fn = torch.nn.CrossEntropyLoss(ignore_index=11)
 
     if not os.path.exists(f"{data_root_filepath}/runs/{run_name}/final_model"):
         os.makedirs(f"{data_root_filepath}/runs/{run_name}/final_model")
@@ -332,6 +312,7 @@ if args.test:
         train_losses.append(train_loss)
 
         # each few epoch save some predicted samples
+        """
         if epoch % 4 == 0:
             utils.save_prediction(
                 model,
@@ -341,7 +322,7 @@ if args.test:
                 device,
                 f"{data_root_filepath}/runs/{run_name}/final_model/prediction_samples"
             )
-
+        """
         # logging
         print(f"\nAvg. train loss={train_loss:.6f}\n", flush=True)
 
