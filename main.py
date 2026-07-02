@@ -12,7 +12,6 @@ import albumentations as A
 from datetime import datetime
 import visualization
 
-import metrics
 import unet
 import fcn
 import segnet
@@ -61,13 +60,6 @@ if not os.path.exists(f"{data_root_filepath}/runs/{run_name}"):
 
 
 # defining transforms to augment data
-"""
-transforms = A.Compose([
-    A.HorizontalFlip(p=0.5),
-    A.VerticalFlip(p=0.5),
-    A.Rotate(limit=270, p=1.0)
-])
-"""
 transforms = A.Compose([
     A.RandomResizedCrop(size=(224, 224)),
     A.HorizontalFlip(p=0.5),
@@ -188,7 +180,6 @@ else:
         val_losses.append(val_loss)
 
         # each few epoch save some predicted samples
-        """
         if epoch % 4 == 0:
             utils.save_prediction(
                 model,
@@ -198,7 +189,6 @@ else:
                 device,
                 f"{data_root_filepath}/runs/{run_name}/model/prediction_samples"
             )
-        """
         # logging
         print(f"\nAvg. train loss={train_loss:.6f}\nAvg. val loss={val_loss:.6f}\n", flush=True)
 
@@ -312,7 +302,6 @@ if args.test:
         train_losses.append(train_loss)
 
         # each few epoch save some predicted samples
-        """
         if epoch % 4 == 0:
             utils.save_prediction(
                 model,
@@ -322,7 +311,6 @@ if args.test:
                 device,
                 f"{data_root_filepath}/runs/{run_name}/final_model/prediction_samples"
             )
-        """
         # logging
         print(f"\nAvg. train loss={train_loss:.6f}\n", flush=True)
 

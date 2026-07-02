@@ -13,20 +13,19 @@ class CAMVID_Dataset(Dataset):
         :param transform: transformation applied to the image and mask
         """
         self.transform = transform
-        self.images_paths = [
+        self.images_paths = sorted([
             f"{images_folder_path}/{filename}"
             for filename in os.listdir(images_folder_path)
-        ]
+        ])
 
-        self.masks_paths = [
+        self.masks_paths = sorted([
             f"{masks_folder_path}/{filename}"
             for filename in os.listdir(masks_folder_path)
-        ]
+        ])
 
         # initialize pixel labels
         df = pd.read_csv(labels_filepath)
         colors = df[["r", "g", "b"]].values
-        # class_names = df["name"].tolist()
 
         self.color2label = {
             tuple(color): idx
