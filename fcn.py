@@ -1,7 +1,4 @@
-import torch
 import torch.nn as nn
-import torch.nn.functional as F
-
 
 class FcnBlock(nn.Module):
     def __init__(self, in_channels, out_channels, kernel_size:int=3, padding=1, depth:int=2):
@@ -53,18 +50,23 @@ class FCN(nn.Module):
         # Fully convolutional layers
         # -------------------------
 
-        self.fc6 = nn.Conv2d(512, 4096, kernel_size=7, padding=3)
+        # TODO: study why vanishing logits due to this number of channels
+        # self.fc6 = nn.Conv2d(512, 4096, kernel_size=7, padding=3)
+        self.fc6 = nn.Conv2d(512, 512, kernel_size=3, padding=3)
         self.relu6 = nn.ReLU(inplace=True)
         self.drop6 = nn.Dropout2d()
 
-        self.fc7 = nn.Conv2d(4096, 4096, kernel_size=1)
+        # self.fc7 = nn.Conv2d(4096, 4096, kernel_size=1)
+        self.fc7 = nn.Conv2d(512, 512, kernel_size=1)
         self.relu7 = nn.ReLU(inplace=True)
         self.drop7 = nn.Dropout2d()
 
         # Classifier
-        self.score = nn.Conv2d(4096, out_channels, kernel_size=1)
+        # self.score = nn.Conv2d(4096, out_channels, kernel_size=1)
+        self.score = nn.Conv2d(512, out_channels, kernel_size=1)
 
         # Upsampling to go back to original size
+        """
         self.upscore = nn.ConvTranspose2d(
             out_channels,
             out_channels,
@@ -73,6 +75,7 @@ class FCN(nn.Module):
             padding=16,
             bias=False
         )
+        """
 
     def forward(self, x):
         input_size = x.size()
@@ -95,7 +98,13 @@ class FCN(nn.Module):
 
         x = self.score(x)
 
-        x = self.upscore(x)
+        # x = self.upscore(x)
+        x = nn.functional.interpolate(
+            x,
+            size=input_size[2:],
+            mode="bilinear",
+            align_corners=False
+        )
 
         # Crop if needed
         x = x[:, :, :input_size[2], :input_size[3]]
