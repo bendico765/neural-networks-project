@@ -69,9 +69,6 @@ transforms = A.Compose([
     A.Normalize()
 ])
 
-# define loss
-loss_fn = nn.CrossEntropyLoss(ignore_index=11)
-
 ### LOADING DATA
 train_data = camvid.CAMVID_Dataset(f"{data_root_filepath}/train", f"{data_root_filepath}/train_labels", labels_filepath=f"{data_root_filepath}/class_palette.csv", transform=transforms)
 validation_data = camvid.CAMVID_Dataset(f"{data_root_filepath}/val", f"{data_root_filepath}/val_labels", labels_filepath=f"{data_root_filepath}/class_palette.csv", transform=transforms)
@@ -96,6 +93,12 @@ print(f"\nData samples------------", flush=True)
 print(f"Training:{len(train_data)}", flush=True)
 print(f"Validation:{len(validation_data)}", flush=True)
 print(f"Test:{len(test_data)}", flush=True)
+
+# define loss
+loss_fn = nn.CrossEntropyLoss(
+    weight=camvid.get_median_frequency_balancing_weights(train_data, 11, 11),
+    ignore_index=11
+)
 
 ### HYPERPARAMETER OPTIMIZATION
 if enable_optimization:
@@ -291,9 +294,6 @@ if args.test:
         lr=learning_rate,
         momentum=momentum
     )
-
-    # define loss
-    loss_fn = torch.nn.CrossEntropyLoss(ignore_index=11)
 
     if not os.path.exists(f"{data_root_filepath}/runs/{run_name}/final_model"):
         os.makedirs(f"{data_root_filepath}/runs/{run_name}/final_model")

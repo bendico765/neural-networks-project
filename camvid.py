@@ -1,9 +1,49 @@
+from torch import Tensor
 from torch.utils.data import Dataset
 from torchvision.io import decode_image, ImageReadMode
 import pandas as pd
 import os
 import numpy as np
 import torch
+
+def get_median_frequency_balancing_weights(dataset: Dataset, num_classes: int, ignore_index: int) -> Tensor:
+    """
+    w_c = median(f_i) / f_c
+
+    where median(f_i) is the median of all the frequencies computed across all classes in the entire
+    training set, and f_c is the frequency of class c, computed only over images where the class is
+    present
+    """
+    class_pixel_count = torch.zeros(num_classes, dtype=torch.float32)
+    class_total_pixels = torch.zeros(num_classes, dtype=torch.float32)
+
+    for _, mask in dataset:
+        mask = torch.as_tensor(mask)
+
+        if ignore_index is not None:
+            # remove the pixels to ignore
+            valid = mask != ignore_index
+            mask = mask[valid]
+
+        total_pixels = mask.numel() # get total number of elements
+
+        for c in range(num_classes):
+            pixels = (mask == c).sum().item() # get total number of pixels belonging to that class
+
+            if pixels > 0:
+                class_pixel_count[c] += pixels
+                class_total_pixels[c] += total_pixels
+
+    frequencies = class_pixel_count / class_total_pixels # tensor of all classes frequencies
+
+    valid = frequencies > 0
+    median_freq = torch.median(frequencies[valid]) # compute median over non-zero frequencies
+
+    weights = torch.zeros(num_classes, dtype=torch.float32)
+    weights[valid] = median_freq / frequencies[valid]
+
+    return weights
+
 
 class CAMVID_Dataset(Dataset):
     def __init__(self, images_folder_path: str, masks_folder_path: str, labels_filepath: str, transform=None):
