@@ -90,6 +90,7 @@ class Objective:
 
         # setting hyperparameters range of values
         learning_rate = trial.suggest_float("lr", 1e-3, 1e-1, log=True)
+        momentum = trial.suggest_float("momentum", 1e-2, 9e-1, log=True)
         batch_size = trial.suggest_categorical("batch-size", [2, 4, 8, 16])
         
         # creating model
@@ -104,7 +105,8 @@ class Objective:
         # defining optimizer
         optimizer = torch.optim.SGD(
             model.parameters(),
-            lr=learning_rate
+            lr=learning_rate,
+            momentum=momentum
         )
     
         # defining loss function

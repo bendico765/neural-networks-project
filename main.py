@@ -26,6 +26,7 @@ parser = argparse.ArgumentParser(description="")
 parser.add_argument("data_root_filepath", help="Path to the project data root directory.")
 parser.add_argument("--model", type=str, choices=["unet", "segnet", "fcn"], default="unet", help="The model to use.")
 parser.add_argument("--lr", type=float, default=1e-3)
+parser.add_argument("--momentum", type=float, default=0)
 parser.add_argument("--n-trials", type=int, default=10, help="Number of trials for hyperparameter optimization")
 parser.add_argument("--batch-size", type=int, default=20, help="Batch size for training")
 parser.add_argument("--epochs", type=int, default=10, help="Number of epochs for hyperparameter optimization and to re-train the final model")
@@ -43,6 +44,7 @@ args = parser.parse_args()
 data_root_filepath = args.data_root_filepath
 model_type = args.model
 learning_rate = args.lr
+momentum = args.momentum
 n_trials = args.n_trials
 batch_size = args.batch_size
 epochs = args.epochs
@@ -146,7 +148,8 @@ else:
     # defining optimizer
     optimizer = torch.optim.SGD(
         model.parameters(),
-        lr=learning_rate
+        lr=learning_rate,
+        momentum=momentum
     )
 
     # initializing early stopping
@@ -285,7 +288,8 @@ if args.test:
     # defining optimizer
     optimizer = torch.optim.SGD(
         model.parameters(),
-        lr=learning_rate
+        lr=learning_rate,
+        momentum=momentum
     )
 
     # define loss
