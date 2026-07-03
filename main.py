@@ -3,6 +3,7 @@ import torch.nn as nn
 from torch.utils.data import DataLoader
 import pandas as pd
 import optuna
+
 import camvid
 import engine
 import argparse
@@ -14,7 +15,7 @@ import visualization
 
 import unet
 import fcn
-import segnet
+from segnet import SegNet
 
 # picking device
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -135,7 +136,8 @@ else:
     if model_type == "unet":
         model = unet.UNet(in_channels=3, out_channels=11)
     elif model_type == "segnet":
-        model = segnet.SegNet(in_channels=3, out_channels=11)
+        # model = segnet.SegNet(in_channels=3, out_channels=11)
+        model = SegNet(in_channels=3, out_channels=11)
     else:
         model= fcn.FCN(in_channels=3, out_channels=11)
 
@@ -275,7 +277,7 @@ if args.test:
     if model_type == "unet":
         model = unet.UNet(in_channels=3, out_channels=11)
     elif model_type == "segnet":
-        model = segnet.SegNet(in_channels=3, out_channels=11)
+        model = SegNet(in_channels=3, out_channels=11)
     else:
         model = fcn.FCN(in_channels=3, out_channels=11)
     model.to(device)

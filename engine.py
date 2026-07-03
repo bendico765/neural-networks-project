@@ -1,10 +1,9 @@
 import torch
 from torch.utils.data import DataLoader
 
-import metrics
 import unet
 import fcn
-import segnet
+from segnet import SegNet
 import os
 import pandas as pd
 import visualization
@@ -97,7 +96,7 @@ class Objective:
         if self.model_type == "unet":
             model = unet.UNet(in_channels=3, out_channels=11)
         elif self.model_type == "segnet":
-            model = segnet.SegNet(in_channels=3, out_channels=11)
+            model = SegNet(in_channels=3, out_channels=11)
         else:
             model = fcn.FCN(in_channels=3, out_channels=11)
         model.to(self.device)
