@@ -13,7 +13,7 @@ import albumentations as A
 from datetime import datetime
 import visualization
 
-import fcn
+from fcn import FCN
 from segnet import SegNet
 from unet import UNet
 
@@ -96,7 +96,7 @@ print(f"Test:{len(test_data)}", flush=True)
 
 # define loss
 loss_fn = nn.CrossEntropyLoss(
-    weight=camvid.get_median_frequency_balancing_weights(train_data, 11, 11),
+    weight=camvid.get_median_frequency_balancing_weights(train_data, 11, 11, device),
     ignore_index=11
 )
 
@@ -144,7 +144,7 @@ else:
         # model = segnet.SegNet(in_channels=3, out_channels=11)
         model = SegNet(in_channels=3, out_channels=11)
     else:
-        model= fcn.FCN(in_channels=3, out_channels=11)
+        model= FCN(in_channels=3, out_channels=11)
 
     model.to(device)
 
@@ -285,7 +285,7 @@ if args.test:
     elif model_type == "segnet":
         model = SegNet(in_channels=3, out_channels=11)
     else:
-        model = fcn.FCN(in_channels=3, out_channels=11)
+        model = FCN(in_channels=3, out_channels=11)
     model.to(device)
 
     # defining optimizer
