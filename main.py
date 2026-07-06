@@ -213,6 +213,7 @@ else:
                 "epoch": epoch,
                 "model_state_dict": early_stopper.best_model_state_dict,
                 "learning_rate": learning_rate,
+                "momentum": momentum,
                 "batch_size": batch_size,
                 "epochs": epochs,
                 "val_loss": early_stopper.best_loss
@@ -231,6 +232,7 @@ else:
                 "model_state_dict": model.state_dict(),
                 "optimizer_state_dict": optimizer.state_dict(),
                 "learning_rate": learning_rate,
+                "momentum": momentum,
                 "batch_size": batch_size,
                 "epochs": epochs,
                 "train_loss": train_loss
@@ -332,6 +334,7 @@ if args.test:
                 "model_state_dict": model.state_dict(),
                 "optimizer_state_dict": optimizer.state_dict(),
                 "learning_rate": learning_rate,
+                "momentum": momentum,
                 "batch_size": batch_size,
                 "epochs": epochs,
                 "train_loss": train_loss
