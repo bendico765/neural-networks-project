@@ -33,6 +33,7 @@ parser.add_argument("--epochs", type=int, default=10, help="Number of epochs for
 parser.add_argument("--patience", type=int, default=5, help="Number of epochs patience for early stopping")
 parser.add_argument("--min-delta", type=float, default=1e-3, help="Minimum delta value for early stopping")
 parser.add_argument("--random-state", type=int, default=None, help="Random state used for loading up data")
+parser.add_argument("--vgg", action="store_true", help="Whether to use VGG16 layers as encoder")
 parser.add_argument(
     "--enable-optimization",
     action="store_true",
@@ -51,6 +52,7 @@ epochs = args.epochs
 patience = args.patience
 min_delta = args.min_delta
 random_state = args.random_state
+use_vgg = args.vgg
 enable_optimization = args.enable_optimization
 
 # save configuration for the current run
@@ -116,6 +118,7 @@ if enable_optimization:
         engine.Objective(
             f"{data_root_filepath}/runs/{run_name}/trials",
             model_type,
+            use_vgg,
             train_dataloader,
             validation_dataloader,
             loss_fn,
@@ -141,11 +144,11 @@ else:
 
     # creating model
     if model_type == "unet":
-        model = UNet(in_channels=3, out_channels=11)
+        model = UNet(in_channels=3, out_channels=11, use_vgg=use_vgg)
     elif model_type == "segnet":
-        model = SegNet(in_channels=3, out_channels=11)
+        model = SegNet(in_channels=3, out_channels=11, use_vgg=use_vgg)
     else:
-        model= FCN(in_channels=3, out_channels=11)
+        model= FCN(in_channels=3, out_channels=11, use_vgg=use_vgg)
 
     model.to(device)
 
@@ -288,11 +291,11 @@ if args.test:
 
     # creating model
     if model_type == "unet":
-        model = UNet(in_channels=3, out_channels=11)
+        model = UNet(in_channels=3, out_channels=11, use_vgg=use_vgg)
     elif model_type == "segnet":
-        model = SegNet(in_channels=3, out_channels=11)
+        model = SegNet(in_channels=3, out_channels=11, use_vgg=use_vgg)
     else:
-        model = FCN(in_channels=3, out_channels=11)
+        model = FCN(in_channels=3, out_channels=11, use_vgg=use_vgg)
     model.to(device)
 
     # defining optimizer

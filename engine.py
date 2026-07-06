@@ -1,8 +1,8 @@
 import torch
 from torch.utils.data import DataLoader
 
-import unet
-import fcn
+from unet import UNet
+from fcn import FCN
 from segnet import SegNet
 import os
 import pandas as pd
@@ -66,6 +66,7 @@ class Objective:
     def __init__(self, 
                  trial_folder_filepath: str,
                  model_type: str,
+                 use_vgg: bool,
                  train_dataloader: DataLoader, 
                  validation_dataloader: DataLoader,
                  loss_fn: torch.nn.Module,
@@ -75,6 +76,7 @@ class Objective:
                  device: torch.device):
         self.trial_folder_filepath = trial_folder_filepath
         self.model_type = model_type
+        self.use_vgg = use_vgg
         self.train_dataloader = train_dataloader
         self.validation_dataloader = validation_dataloader
         self.loss_fn = loss_fn
@@ -95,11 +97,11 @@ class Objective:
         
         # creating model
         if self.model_type == "unet":
-            model = unet.UNet(in_channels=3, out_channels=11)
+            model = UNet(in_channels=3, out_channels=11, use_vgg=self.use_vgg)
         elif self.model_type == "segnet":
-            model = SegNet(in_channels=3, out_channels=11)
+            model = SegNet(in_channels=3, out_channels=11, use_vgg=self.use_vgg)
         else:
-            model = fcn.FCN(in_channels=3, out_channels=11)
+            model = FCN(in_channels=3, out_channels=11, use_vgg=self.use_vgg)
         model.to(self.device)
         
         # defining optimizer
