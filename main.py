@@ -141,7 +141,6 @@ else:
     if model_type == "unet":
         model = UNet(in_channels=3, out_channels=11)
     elif model_type == "segnet":
-        # model = segnet.SegNet(in_channels=3, out_channels=11)
         model = SegNet(in_channels=3, out_channels=11)
     else:
         model= FCN(in_channels=3, out_channels=11)
@@ -200,22 +199,6 @@ else:
         # logging
         print(f"\nAvg. train loss={train_loss:.6f}\nAvg. val loss={val_loss:.6f}\n", flush=True)
 
-        # saving model checkpoints
-        if not os.path.exists(f"{data_root_filepath}/runs/{run_name}/model/checkpoints"):
-            os.makedirs(f"{data_root_filepath}/runs/{run_name}/model/checkpoints")
-
-        torch.save({
-            "epoch": epoch,
-            "model_state_dict": model.state_dict(),
-            "optimizer_state_dict": optimizer.state_dict(),
-            "learning_rate": learning_rate,
-            "batch_size": batch_size,
-            "epochs": epochs,
-            "train_loss": train_loss
-        },
-            f"{data_root_filepath}/runs/{run_name}/model/checkpoints/checkpoint_{epoch}.pth"
-        )
-
         # checking early stopping
         early_stopper(val_loss, model)
         if early_stopper.early_stop:
@@ -223,6 +206,9 @@ else:
             epochs = epoch + 1
 
             # save best model
+            if not os.path.exists(f"{data_root_filepath}/runs/{run_name}/model/checkpoints"):
+                os.makedirs(f"{data_root_filepath}/runs/{run_name}/model/checkpoints")
+
             torch.save({
                 "epoch": epoch,
                 "model_state_dict": early_stopper.best_model_state_dict,
@@ -234,6 +220,23 @@ else:
             f"{data_root_filepath}/runs/{run_name}/model/checkpoints/best_model_checkpoint.pth"
             )
             break
+
+        # saving model last checkpoint
+        if epoch == epochs - 1:
+            if not os.path.exists(f"{data_root_filepath}/runs/{run_name}/model/checkpoints"):
+                os.makedirs(f"{data_root_filepath}/runs/{run_name}/model/checkpoints")
+
+            torch.save({
+                "epoch": epoch,
+                "model_state_dict": model.state_dict(),
+                "optimizer_state_dict": optimizer.state_dict(),
+                "learning_rate": learning_rate,
+                "batch_size": batch_size,
+                "epochs": epochs,
+                "train_loss": train_loss
+            },
+                f"{data_root_filepath}/runs/{run_name}/model/checkpoints/checkpoint_{epoch}.pth"
+            )
 
     ### LOGGING ###
     if not os.path.exists(f"{data_root_filepath}/runs/{run_name}/model/logs"):
@@ -320,21 +323,21 @@ if args.test:
         # logging
         print(f"\nAvg. train loss={train_loss:.6f}\n", flush=True)
 
-        # saving model checkpoints
-        if not os.path.exists(f"{data_root_filepath}/runs/{run_name}/final_model/checkpoints"):
-            os.makedirs(f"{data_root_filepath}/runs/{run_name}/final_model/checkpoints")
+        if epoch == epochs-1: # saving model checkpoints
+            if not os.path.exists(f"{data_root_filepath}/runs/{run_name}/final_model/checkpoints"):
+                os.makedirs(f"{data_root_filepath}/runs/{run_name}/final_model/checkpoints")
 
-        torch.save({
-            "epoch": epoch,
-            "model_state_dict": model.state_dict(),
-            "optimizer_state_dict": optimizer.state_dict(),
-            "learning_rate": learning_rate,
-            "batch_size": batch_size,
-            "epochs": epochs,
-            "train_loss": train_loss
-        },
-            f"{data_root_filepath}/runs/{run_name}/final_model/checkpoints/checkpoint_{epoch}.pth"
-        )
+            torch.save({
+                "epoch": epoch,
+                "model_state_dict": model.state_dict(),
+                "optimizer_state_dict": optimizer.state_dict(),
+                "learning_rate": learning_rate,
+                "batch_size": batch_size,
+                "epochs": epochs,
+                "train_loss": train_loss
+            },
+                f"{data_root_filepath}/runs/{run_name}/final_model/checkpoints/checkpoint_{epoch}.pth"
+            )
 
     # Make inference on the test set
     print("\nINFERENCE ON THE TEST SET", flush=True)

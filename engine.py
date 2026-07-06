@@ -136,42 +136,16 @@ class Objective:
             val_loss = test_loop(self.validation_dataloader, model, loss_fn, self.device)
             val_losses.append(val_loss)
 
-            # each few epoch save some predicted samples
-            """
-            if epoch % 4 == 0:
-                utils.save_prediction(
-                    model,
-                    self.validation_dataloader,
-                    loss_fn,
-                    epoch,
-                    self.device,
-                    f"{self.trial_folder_filepath}/{trial.number}/figs/prediction_samples"
-                )
-            """
             print(f"\nAvg. train loss={train_loss:.6f}\nAvg. val loss={val_loss:.6f}\n", flush=True)
-
-            # saving model checkpoints
-            if not os.path.exists(f"{self.trial_folder_filepath}/{trial.number}/checkpoints"):
-                os.makedirs(f"{self.trial_folder_filepath}/{trial.number}/checkpoints")
-
-            torch.save({
-                "epoch": epoch,
-                "model_state_dict": model.state_dict(),
-                "optimizer_state_dict": optimizer.state_dict(),
-                "learning_rate": learning_rate,
-                "batch_size": batch_size,
-                "epochs": self.epochs,
-                "train_loss": train_loss,
-                "val_loss": val_loss
-            },
-                f"{self.trial_folder_filepath}/{trial.number}/checkpoints/checkpoint_{epoch}.pth"
-            )
 
             # checking early stopping
             early_stopper(val_loss, model)
             if early_stopper.early_stop:
                 print("Early stopping triggered", flush=True)
                 self.epochs = epoch + 1
+
+                if not os.path.exists(f"{self.trial_folder_filepath}/{trial.number}/checkpoints"):
+                    os.makedirs(f"{self.trial_folder_filepath}/{trial.number}/checkpoints")
 
                 # save best model
                 torch.save({
@@ -185,6 +159,23 @@ class Objective:
                     f"{self.trial_folder_filepath}/{trial.number}/checkpoints/best_model_checkpoint.pth"
                 )
                 break
+
+            if epoch == self.epochs-1: # saving model checkpoints
+                if not os.path.exists(f"{self.trial_folder_filepath}/{trial.number}/checkpoints"):
+                    os.makedirs(f"{self.trial_folder_filepath}/{trial.number}/checkpoints")
+
+                torch.save({
+                    "epoch": epoch,
+                    "model_state_dict": model.state_dict(),
+                    "optimizer_state_dict": optimizer.state_dict(),
+                    "learning_rate": learning_rate,
+                    "batch_size": batch_size,
+                    "epochs": self.epochs,
+                    "train_loss": train_loss,
+                    "val_loss": val_loss
+                },
+                    f"{self.trial_folder_filepath}/{trial.number}/checkpoints/checkpoint_{epoch}.pth"
+                )
 
         # saving the number of epochs performed (useful in case of early stopping)
         trial.set_user_attr("epochs", self.epochs)
