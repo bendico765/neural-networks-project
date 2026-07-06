@@ -42,7 +42,7 @@ def get_median_frequency_balancing_weights(dataset: Dataset, num_classes: int, i
     weights = torch.zeros(num_classes, dtype=torch.float32)
     weights[valid] = median_freq / frequencies[valid]
 
-    return weights
+    return weights.to(device)
 
 
 class CAMVID_Dataset(Dataset):
