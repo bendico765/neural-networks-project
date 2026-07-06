@@ -77,6 +77,7 @@ test_data = camvid.CAMVID_Dataset(f"{data_root_filepath}/test", f"{data_root_fil
 train_dataloader = DataLoader(
     train_data,
     batch_size=batch_size,
+    shuffle=True,
     num_workers=4,
     pin_memory=True,
     persistent_workers=True
@@ -84,6 +85,7 @@ train_dataloader = DataLoader(
 validation_dataloader = DataLoader(
     validation_data,
     batch_size=batch_size,
+    shuffle=True,
     num_workers=4,
     pin_memory=True,
     persistent_workers=True
