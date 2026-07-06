@@ -6,7 +6,7 @@ import os
 import numpy as np
 import torch
 
-def get_median_frequency_balancing_weights(dataset: Dataset, num_classes: int, ignore_index: int) -> Tensor:
+def get_median_frequency_balancing_weights(dataset: Dataset, num_classes: int, ignore_index: int, device) -> Tensor:
     """
     w_c = median(f_i) / f_c
 
