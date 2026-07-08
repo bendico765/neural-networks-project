@@ -71,10 +71,15 @@ transforms = A.Compose([
     A.Normalize()
 ])
 
+test_transforms = A.Compose([
+    A.Resize(224, 224),
+    A.Normalize()
+])
+
 ### LOADING DATA
 train_data = camvid.CAMVID_Dataset(f"{data_root_filepath}/train", f"{data_root_filepath}/train_labels", labels_filepath=f"{data_root_filepath}/class_palette.csv", transform=transforms)
 validation_data = camvid.CAMVID_Dataset(f"{data_root_filepath}/val", f"{data_root_filepath}/val_labels", labels_filepath=f"{data_root_filepath}/class_palette.csv", transform=transforms)
-test_data = camvid.CAMVID_Dataset(f"{data_root_filepath}/test", f"{data_root_filepath}/test_labels", labels_filepath=f"{data_root_filepath}/class_palette.csv")
+test_data = camvid.CAMVID_Dataset(f"{data_root_filepath}/test", f"{data_root_filepath}/test_labels", labels_filepath=f"{data_root_filepath}/class_palette.csv", transform=test_transforms)
 
 train_dataloader = DataLoader(
     train_data,
