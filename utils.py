@@ -45,11 +45,9 @@ def save_prediction(
         X, y = next(iter(dataloader))
 
         X = X.to(device)
+        y = y.to(device)
         logits = model(X)
 
-        X = X.to("cpu")
-        y = y.to("cpu")
-        logits = logits.to("cpu")
         preds = logits.argmax(dim=1)
 
         # number of samples to show minimum between n_samples and batch_size
@@ -61,7 +59,7 @@ def save_prediction(
             loss = loss_fn(logits[i].unsqueeze(0), y[i].unsqueeze(0)).item()
 
             # input image
-            image = X[i].permute((1,2,0))
+            image = X[i].to("cpu").permute((1,2,0))
             # Reverse the transformation and clip to safety
             img_to_show = (image * np.array([0.229, 0.224, 0.225])) + np.array([0.485, 0.456, 0.406])
             img_to_show = np.clip(img_to_show, 0, 1)
@@ -71,12 +69,12 @@ def save_prediction(
             axes[i,0].axis("off")
 
             # ground truth
-            axes[i,1].imshow(y[i])
+            axes[i,1].imshow(y[i].to("cpu"))
             axes[i,1].set_title("Ground Truth")
             axes[i,1].axis("off")
 
             # prediction
-            axes[i,2].imshow(preds[i])
+            axes[i,2].imshow(preds[i].to("cpu"))
             axes[i,2].set_title(f"Prediction (Loss: {loss:.4f})")
             axes[i,2].axis("off")
 
