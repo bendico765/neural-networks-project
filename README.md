@@ -33,7 +33,7 @@ dimensions between input and output.
 
 ### Training and evaluation loop
 The dataset is typically provided with a data split into training, validation, and 
-test sets of $367\ (52\%)$, $101\ (15\%)$, and $233\ (33\%)$, respectively. This data 
+test sets of $367 (52\\%)$, $101 (15\\%)$, and $233 (33\\%)$, respectively. This data 
 split is the most commonly used in work using this dataset (such as 
 [SegNet](https://doi.org/10.1109/TPAMI.2016.2644615)), and has therefore been retained here as well.
 
