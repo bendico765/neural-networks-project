@@ -28,6 +28,30 @@ class EarlyStopping:
             if self.counter >= self.patience:
                 self.early_stop = True
 
+
+def label2category(img):
+    label2color = {
+        0: (np.int64(128), np.int64(128), np.int64(128)),
+        1: (np.int64(128), np.int64(0), np.int64(0)),
+        2: (np.int64(192), np.int64(192), np.int64(128)),
+        3: (np.int64(128), np.int64(64), np.int64(128)),
+        4: (np.int64(0), np.int64(0), np.int64(192)),
+        5: (np.int64(128), np.int64(128), np.int64(0)),
+        6: (np.int64(192), np.int64(128), np.int64(128)),
+        7: (np.int64(64), np.int64(64), np.int64(128)),
+        8: (np.int64(64), np.int64(0), np.int64(128)),
+        9: (np.int64(64), np.int64(64), np.int64(0)),
+        10: (np.int64(0), np.int64(128), np.int64(192)),
+        11: (np.int64(0), np.int64(0), np.int64(0))
+    }
+
+    rgb_img = np.zeros((*img.shape, 3), dtype=np.uint8)
+
+    for category, color in label2color.items():
+        rgb_img[img == category] = color
+
+    return rgb_img
+
 def save_prediction(
         model,
         dataloader: torch.utils.data.DataLoader,
@@ -69,12 +93,12 @@ def save_prediction(
             axes[i,0].axis("off")
 
             # ground truth
-            axes[i,1].imshow(y[i].to("cpu"))
+            axes[i,1].imshow(label2category(y[i].to("cpu")))
             axes[i,1].set_title("Ground Truth")
             axes[i,1].axis("off")
 
             # prediction
-            axes[i,2].imshow(preds[i].to("cpu"))
+            axes[i,2].imshow(label2category(preds[i].to("cpu")))
             axes[i,2].set_title(f"Prediction (Loss: {loss:.4f})")
             axes[i,2].axis("off")
 
