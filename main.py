@@ -33,7 +33,6 @@ parser.add_argument("--batch-size", type=int, default=20, help="Batch size for t
 parser.add_argument("--epochs", type=int, default=10, help="Number of epochs for hyperparameter optimization and to re-train the final model. Default is 10")
 parser.add_argument("--patience", type=int, default=5, help="Number of epochs patience for early stopping. Default is 5")
 parser.add_argument("--min-delta", type=float, default=1e-3, help="Minimum delta value for early stopping. Default is 0.001")
-parser.add_argument("--random-state", type=int, default=None, help="Random state used for loading up data")
 parser.add_argument("--vgg", action="store_true", help="Whether to use VGG16 layers as encoder. Default is true")
 parser.add_argument(
     "--enable-optimization",
@@ -53,7 +52,6 @@ batch_size = args.batch_size
 epochs = args.epochs
 patience = args.patience
 min_delta = args.min_delta
-random_state = args.random_state
 use_vgg = args.vgg
 enable_optimization = args.enable_optimization
 
