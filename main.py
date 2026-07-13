@@ -24,7 +24,8 @@ print(f"Device:{device}")
 # path to the root folder of the data
 parser = argparse.ArgumentParser(description="")
 parser.add_argument("data_root_filepath", help="Path to the project data root directory.")
-parser.add_argument("--model", type=str, choices=["unet", "segnet", "fcn"], default="unet", help="The model to use.")
+parser.add_argument("--image-size", type=int, default=224, help="Image size of the cropped and resized CamVid images.")
+parser.add_argument("--model", type=str, choices=["unet", "segnet", "fcn"], default="unet", help="The model architecture to use.")
 parser.add_argument("--lr", type=float, default=1e-3)
 parser.add_argument("--momentum", type=float, default=0)
 parser.add_argument("--n-trials", type=int, default=10, help="Number of trials for hyperparameter optimization")
@@ -43,6 +44,7 @@ args = parser.parse_args()
 
 # Command-line parameters
 data_root_filepath = args.data_root_filepath
+image_size = args.image_size
 model_type = args.model
 learning_rate = args.lr
 momentum = args.momentum
@@ -66,13 +68,13 @@ if not os.path.exists(f"{data_root_filepath}/runs/{run_name}"):
 
 # defining transforms to augment data
 transforms = A.Compose([
-    A.RandomResizedCrop(size=(224, 224)),
+    A.RandomResizedCrop(size=(image_size, image_size)),
     A.HorizontalFlip(p=0.5),
     A.Normalize()
 ])
 
 test_transforms = A.Compose([
-    A.Resize(224, 224),
+    A.Resize(height=image_size, width=image_size),
     A.Normalize()
 ])
 
