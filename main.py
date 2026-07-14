@@ -24,7 +24,7 @@ print(f"Device:{device}")
 # path to the root folder of the data
 parser = argparse.ArgumentParser(description="")
 parser.add_argument("data_root_filepath", help="Path to the project data root directory.")
-parser.add_argument("--image-size", type=int, default=224, help="Image size of the cropped and resized CamVid images.")
+parser.add_argument("--image-size", type=int, default=224, help="Image size of the cropped and resized CamVid images. Default is 224")
 parser.add_argument("--model", type=str, choices=["unet", "segnet", "fcn"], default="unet", help="The model architecture to use. Default is UNet")
 parser.add_argument("--lr", type=float, default=1e-3, help="The learning rate to use. Default is 0.001")
 parser.add_argument("--momentum", type=float, default=0, help="The momentum value to use. Default is 0")
